@@ -1,12 +1,9 @@
 ﻿using ExcelGenerator.Classes;
 using OfficeOpenXml;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using OfficeOpenXml.Style;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Drawing;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 
 namespace ExcelGenerator
 {
@@ -162,7 +159,7 @@ namespace ExcelGenerator
 					var cellToStyle = excelWorksheet.Cells[subitem.RowPos, subitem.ColPos];
 					cellToStyle.Value = subitem.Value;
 
-					// Asignar estilo desde tu lista de estilos personalizada
+					// Setup style from custom style list
 					if (subitem.Style != null)
 					{
 						ApplyCustomStyle(cellToStyle, subitem.Style);
@@ -176,11 +173,12 @@ namespace ExcelGenerator
             {
 				expack.Workbook.Worksheets[1].Column(i).Width = this.ColumnWidth;
 			}
+
             return expack;
 
 		}
 
-		
+	
 		private void ApplyCustomStyle(ExcelRange cell, ExcelCellStyle customStyle)
 		{
 			try

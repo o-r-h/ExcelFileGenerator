@@ -1,13 +1,9 @@
 ﻿using ExcelGenerator;
 using OfficeOpenXml;
-using OfficeOpenXml.Style;
-using OfficeOpenXml.Style.XmlAccess;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using WebAppExcelSample.Classes;
 
@@ -53,6 +49,7 @@ namespace WebAppExcelSample.Controllers
 				string fullFileName = "Testing-excel-generator.xlsx";
 				using (var memoryStream = new MemoryStream())
 				{
+					
 					excelPackage.SaveAs(memoryStream, password);  //If you want to add encrypt to file
 					byte[] fileBytes = memoryStream.ToArray();
 					Response.Headers.Add("Excel-File-Name", fullFileName);
@@ -96,6 +93,7 @@ namespace WebAppExcelSample.Controllers
 					FontSize = 12
 				}.CreateStyle();
 
+
 				var builderExcel = new BuilderExcel<Example>
 				{
 					Title = "", //null or empty if you don't want a title
@@ -106,6 +104,7 @@ namespace WebAppExcelSample.Controllers
 					TitleCellStyles = titleCellStyle,
                     ColumnWidth = 25,
 					listOfRecords = new List<Example>(GetAllexamples())
+				
 				};
 				return builderExcel.Builder(1, 1);
 			}
