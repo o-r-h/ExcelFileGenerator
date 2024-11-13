@@ -1,5 +1,4 @@
 ﻿using ExcelGenerator;
-using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -44,19 +43,15 @@ namespace WebAppExcelSample.Controllers
 		{
 			try
 			{
-				var excelPackage = TestLibrary();
-				string password = "SuperUltraPassword"; //Please don't do that in production
+				
+				var fileBytes = TestLibrary();
 				string fullFileName = "Testing-excel-generator.xlsx";
-				using (var memoryStream = new MemoryStream())
-				{
-					
-					excelPackage.SaveAs(memoryStream, password);  //If you want to add encrypt to file
-					byte[] fileBytes = memoryStream.ToArray();
-					Response.Headers.Add("Excel-File-Name", fullFileName);
-					return File(fileBytes,
+				Response.Headers.Add("Excel-File-Name", fullFileName);
+				return File(fileBytes,
 								"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 								fullFileName);
-				}
+
+
 			}
 			catch (Exception ex)
 			{
@@ -70,12 +65,13 @@ namespace WebAppExcelSample.Controllers
 		}
 
 
-        private ExcelPackage TestLibrary(){
+        private byte[] TestLibrary(){
             try
             {
 				List<ExcelGenerator.Classes.ExcelCellStyle> excelCellStylesList = new List<ExcelGenerator.Classes.ExcelCellStyle>();
 				ExcelGenerator.Classes.ExcelCellStyle titleCellStyle = new ExcelGenerator.Classes.ExcelCellStyle();
 				ExcelGenerator.Classes.ExcelCellStyle tableHeaderStyle = new ExcelGenerator.Classes.ExcelCellStyle();
+
 				titleCellStyle = new ExcelCellStyleCreator
 				{
 					BackgroundColor = Color.Blue,
@@ -84,6 +80,7 @@ namespace WebAppExcelSample.Controllers
 					FontName = "Arial",
 					FontSize = 14
 				}.CreateStyle();
+
 				tableHeaderStyle = new ExcelCellStyleCreator
 				{
 					BackgroundColor = Color.CadetBlue,
@@ -98,7 +95,6 @@ namespace WebAppExcelSample.Controllers
 				{
 					Title = "", //null or empty if you don't want a title
 					SheetName = "Test-Excel",
-                    FileName ="ExcelFile", //just put any name, on download set the real name
 					TableHeaderNames = "Item,Name,PageNumber",
 					TableHeaderCellStyles = tableHeaderStyle,
 					TitleCellStyles = titleCellStyle,
@@ -106,7 +102,11 @@ namespace WebAppExcelSample.Controllers
 					listOfRecords = new List<Example>(GetAllexamples())
 				
 				};
-				return builderExcel.Builder(1, 1);
+
+
+				var result = builderExcel.BuilderExcelFile(1, 1);
+				return result;
+				//turn builderExcel.Builder(1, 1);
 			}
             catch (Exception ex)
             {

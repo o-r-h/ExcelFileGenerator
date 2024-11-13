@@ -1,8 +1,10 @@
 ﻿using ExcelGenerator.Classes;
 using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using OfficeOpenXml.Style;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 
 namespace ExcelGenerator
@@ -10,8 +12,8 @@ namespace ExcelGenerator
    
     public class BuilderExcel<T> 
     {   
-        public string FileName { get; set; } = string.Empty;
-        public string SheetName { get; set; } = string.Empty;
+        private string FileName { get; set; } ="default-name";
+        public string SheetName { get; set; } = "Sheet1";
 		public ExcelCellStyle TitleCellStyles {  get; set; }
 		public ExcelCellStyle TableHeaderCellStyles { get; set; }
 		public List<T> listOfRecords { get; set; }
@@ -21,13 +23,11 @@ namespace ExcelGenerator
         public int RowStart { get; set; } = 1;
 		public string MessageError {  get; set; } =string.Empty;
 		public int ColumnWidth { get; set; } = 25;
+		public bool IsEncrypted { get; set; } = false;
+		public string EncryptedKey { get; set; } = string.Empty;
 
 		private bool IsValidToBuild(){
-			if( string.IsNullOrEmpty(this.FileName))
-			{
-				this.MessageError = "Error, fileName is mandatory";
-				return false;
-			}
+			
 			if (string.IsNullOrEmpty(this.SheetName))
 			{
 				this.MessageError = "Error, SheetName is mandatory";
@@ -45,14 +45,22 @@ namespace ExcelGenerator
 				return false;
 			}
 
+			if (this.IsEncrypted == true && string.IsNullOrEmpty(this.EncryptedKey))
+			{
+				this.MessageError = "Error, EncryptedKey must have value";
+				return false;
+			}
+
 			return true;
 
 		}
 
-		public ExcelPackage Builder(int initialCellRowPos, int initialColRowPos)
+		
+		public byte[] BuilderExcelFile(int initialCellRowPos, int initialColRowPos)
 		{
-			if (!this.IsValidToBuild()) {
-				throw new Exception($"Exception,{ this.MessageError} ");
+			if (!this.IsValidToBuild())
+			{
+				throw new Exception($"Exception,{this.MessageError} ");
 			}
 			ExcelPackage expack = new ExcelPackage();
 			ExcelFile xls = new ExcelFile();
@@ -91,15 +99,16 @@ namespace ExcelGenerator
 			//if TableHeaderNames is not null;
 			if (!string.IsNullOrEmpty(this.TableHeaderNames))
 			{
-				 listHeaderNames = TableHeaderNames.Split(',');
+				listHeaderNames = TableHeaderNames.Split(',');
 				int hx = 1;
-				foreach (string s in listHeaderNames) {
+				foreach (string s in listHeaderNames)
+				{
 
 					Cell cell = new Cell { ColPos = hx, RowPos = ipos, Value = s };
 					cell.Style = xls.ExcelWorkSheets[0].ExcelCellStyles[1];
 					cellList.Add(cell);
 					sheet.Cells.Add(cell);
-				
+
 					hx++;
 				}
 				ipos++;
@@ -169,16 +178,24 @@ namespace ExcelGenerator
 			}
 
 			//Setup column's witdh
-            for (int i = 1; i <= listHeaderNames.Length; i++)
-            {
+			for (int i = 1; i <= listHeaderNames.Length; i++)
+			{
 				expack.Workbook.Worksheets[1].Column(i).Width = this.ColumnWidth;
 			}
-
-            return expack;
+			
+			using (var memoryStream = new MemoryStream())
+			{
+				if (this.IsEncrypted ==true){
+					expack.SaveAs(memoryStream,this.EncryptedKey);
+					return memoryStream.ToArray();
+				}
+				expack.SaveAs(memoryStream);  
+				return memoryStream.ToArray(); 
+			}
 
 		}
 
-	
+
 		private void ApplyCustomStyle(ExcelRange cell, ExcelCellStyle customStyle)
 		{
 			try
